@@ -1,0 +1,14 @@
+<html>
+<body>
+
+<h3>
+  <img src="../resources/logo.png" height="30px"/>
+  <%= title %>
+</h3>
+
+<% for( var i = 0; i < views.length; i ++ ){ %>
+  <a target="docs" href="../docs/<%= views[i] %>"><%= views[i] %></a></br>
+<% } %>
+
+</body>
+</html>

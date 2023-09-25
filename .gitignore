@@ -1,0 +1,7 @@
+node_modules/
+package-lock.json
+public/documents/*.xml
+web/
+npm-debug.log
+.memo.txt
+.env.*

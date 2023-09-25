@@ -1,0 +1,21 @@
+{
+    "name": "cms.xsl",
+    "version": "0.0.1",
+    "scripts": {
+        "finalize": "node finalize.js",
+        "start": "node app.js",
+        "web": "node web.js"
+    },
+    "dependencies": {
+        "@xmldom/xmldom": "^0.8.10",
+        "body-parser": "^1.20.2",
+        "dotenv": "^16.3.1",
+        "ejs": "^3.1.9",
+        "express": "^4.18.2",
+        "xpath": "^0.0.33"
+    },
+    "repository": {},
+    "engines": {
+        "node": "18.x"
+    }
+}

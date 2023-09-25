@@ -1,0 +1,15 @@
+<html>
+<head>
+  <title><%= title %></title>
+  <link rel="icon" href="./resources/logo.png"/>
+  <link rel="apple-touch-icon" href="./resources/logo.png"/>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+</head>
+<frameset rows="40%,*">
+  <frameset cols="30%,*">
+    <frame src="./views?title=<%= title %>" name="views"/>
+    <frame name="docs"/>
+  </frameset>
+  <frame name="doc"/>
+</frameset>
+</html>
