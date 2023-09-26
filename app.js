@@ -304,7 +304,8 @@ app.readDocs = async function( view ){
                 doc['$id'] = doc_id;
                 doc['$form'] = form;
                 for( var i = 0; i < field_names.length; i ++ ){
-                  var item_node_value = select( "item[@name='" + field_names[i] + "']/text()", document_node, true ).nodeValue;
+                  var _item_node_value = select( "item[@name='" + field_names[i] + "']/text()", document_node, true );
+                  var item_node_value = ( _item_node_value ? _item_node_value.nodeValue : '' );
                   doc[field_names[i]] = item_node_value;
                 }
 
@@ -336,6 +337,10 @@ app.readDoc = async function( doc_id ){
       if( doc_item_nodes ){
         doc_item_nodes.forEach( async function( doc_item_node ){
           var field_name = select( "@name", doc_item_node, true ).nodeValue;
+
+          var _field_type = select( "@type", doc_item_node, true );
+          var field_type = ( _field_type ? _field_type.nodeValue : '' );
+
           //var field_value = doc_item_node.nodeValue;
           var field_value = select( "text()", doc_item_node, true );
           if( field_value && field_value.nodeValue ){
@@ -344,6 +349,32 @@ app.readDoc = async function( doc_id ){
             //. #3 値が <p>～～</p><p>～～</p> のようなリッチテキストだと値が正しく取得できずにここに来る
             //. text() ではなく、html タグごと取得する方法が必要
             field_value = '';//select( "parent/text()", doc_item_node, true ).nodeValue;
+
+            var b = false;
+            var n1 = xml.indexOf( '<item ' )
+            while( !b && n1 > -1 ){
+              var n2 = xml.indexOf( '>', n1 + 1 )
+              var n3 = xml.indexOf( '</item>', n2 + 1 )
+              if( n2 > n1 + 1 && n3 > n2 + 1 ){
+                var item_xml = xml.substring( n1, n3 + 7 );
+
+                var n4 = item_xml.indexOf( 'name="' );
+                var n5 = item_xml.indexOf( '"', n4 + 6 );
+                if( n4 > -1 && n5 > n4 + 6 ){
+                  var item_name = item_xml.substring( n4 + 6, n5 );
+                  if( item_name == field_name ){
+                    field_value = xml.substring( n2 + 1, n3 );
+                    b = true;
+                  }
+                }
+              }
+
+              n1 = xml.indexOf( '<item ', n1 + 1 )
+            }
+          }
+
+          if( field_type == 'richtext' ){
+            field_value = app.sanitize( field_value );
           }
           values[field_name] = field_value;
         });
@@ -578,6 +609,18 @@ app.updateDoc = async function( body, id ){
       resolve( null );
     }
   });
+}
+
+app.sanitize = function( str ){
+  try{
+    str = str.split( '&' ).join( '&amp;' );
+    str = str.split( '>' ).join( '&gt;' );
+    str = str.split( '>' ).join( '&gt;' );
+  }catch( e ){
+    console.log( e );
+  }
+
+  return  str;
 }
 
 
