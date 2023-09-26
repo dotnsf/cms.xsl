@@ -42,6 +42,45 @@ XSL を活用した CMS
 - Go `http://xx.xx.xx.xx:8080/`
 
 
+## How to customize app
+
+### How to add forms/views
+
+- Create Form XSL file under `public/forms` folder:
+
+  - This file is supposed to be a XSL form for each documents.
+
+  - You can copy from `memo.xsl`
+
+  - You need to specify:
+
+    - `<xsl:value-of>` field for single line text
+
+    - `<xsl:copy-of>` field for multi lines textarea
+
+      - You might have to add `<pre>` tag over `<xsl:copy-of>` to view multilined-texts correctly.
+
+```
+<div style="text-align: center;">
+<h1><xsl:value-of select="document/item[@name='subject']" /></h1>
+</div>
+
+<div>
+<pre>
+<xsl:copy-of select="document/item[@name='body']" />
+</pre>
+</div>
+```
+
+- View XML file would be generated under `public/views` folder:
+
+  - This file would be named as `form`s.
+
+  - This file is supposed to contain column fields of view.
+
+  - You can customize this file for your document list.
+
+
 ## How to finalize app
 
 - `$ cd (WORKING_FOLDER)/cms.xsl`
