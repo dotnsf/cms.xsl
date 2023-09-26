@@ -13,7 +13,9 @@
 <h1><xsl:value-of select="document/item[@name='subject']" /></h1>
 </div>
 <div>
+<pre>
 <xsl:copy-of select="document/item[@name='body']" />
+</pre>
 </div>
 <div style="text-align: right;">
 <xsl:value-of select="document/item[@name='username']" />

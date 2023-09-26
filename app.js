@@ -11,7 +11,8 @@ var APP_NAME = 'APP_NAME' in process.env ? process.env.APP_NAME : '';
 
 var xpath = require( 'xpath' );
 var dom = require( '@xmldom/xmldom' ).DOMParser;
-var select = xpath.useNamespaces( { /* a: 'http://www.lotus.com/dxl' */ } );  //. xmlns を指定する場合は、ここで指定する
+//var select = xpath.useNamespaces( { /* a: 'http://www.lotus.com/dxl' */ } );  //. xmlns を指定する場合は、ここで指定する
+var select = xpath.useNamespaces( { xsl: 'http://www.w3.org/1999/XSL/Transform' } );
 
 var target_dir = __dirname + '/public';
 
@@ -35,6 +36,15 @@ app.use( function( req, res, next ){
 
 //. index（フレームセット）
 app.get( '/', async function( req, res ){
+  //. #4
+  var forms = await app.readForms();
+  if( forms ){
+    forms.forEach( async function( form ){
+      var view = form + 's';
+      var r = await app.createViewXML( view );
+    });
+  }
+
   var title = req.query.title ? req.query.title : APP_NAME;
   res.render( 'index', { title: title } );
 });
@@ -128,6 +138,22 @@ app.delete( '/doc/:doc_id', async function( req, res ){
 });
 
 
+app.readForms = async function(){
+  return new Promise( async function( resolve, reject ){
+    var forms = [];
+    var forms_subfolder = target_dir + '/forms';
+    var filenames = fs.readdirSync( forms_subfolder );
+    filenames.forEach( function( filename ){
+      if( filename.toLowerCase().endsWith( ".xsl" ) ){
+        var formname = filename.substring( 0, filename.length - 4 );
+        forms.push( formname );
+      }
+    });
+
+    resolve( forms );
+  });
+};
+
 app.readViews = async function(){
   return new Promise( async function( resolve, reject ){
     var views = [];
@@ -162,10 +188,15 @@ app.createViewXML = async function( view ){
       var forms_subfolder = target_dir + '/forms';
       var form_xsl_filepath = forms_subfolder + '/' + form + '.xsl';
       var form_xsl = fs.readFileSync( form_xsl_filepath, 'utf-8' );
+      console.log({form_xsl});
 
       var xsl = new dom().parseFromString( form_xsl, 'text/xml' );
 
-      var valueof_nodes = select( "html/body/xsl:value-of", xsl, false );
+      var body_nodes = select( "html", xsl, false ); 
+      console.log({body_nodes});
+
+      var valueof_nodes = select( "html/body/xsl:value-of", xsl, false );  //. = [] になってしまう
+      console.log({valueof_nodes});
       if( valueof_nodes ){
         valueof_nodes.forEach( async function( valueof_node ){
           var valueof_select = select( "@select", valueof_node, true ).nodeValue; //. document/item[@name='Subject']
