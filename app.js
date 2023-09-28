@@ -57,7 +57,6 @@ app.get( '/views', async function( req, res ){
 });
 
 //. docs（ビュー内の文書一覧）
-//app.get( '/view/:view', async function( req, res ){
 app.get( '/docs/:view', async function( req, res ){
   var view = req.params.view;
   var form = view.substr( 0, view.length - 1 );
@@ -182,18 +181,17 @@ app.createViewXML = async function( view ){
     var view_displayname = view;
     if( !fs.existsSync( view_xml_filepath ) ){
       var view_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
-        //+ '<?xml-stylesheet type="text/xsl" href="./' + view + '.xsl"?>\n'
         + '<view name="' + view + '" displayname="' + view + '">\n';
       var form = view.substr( 0, view.length - 1 );
       var forms_subfolder = target_dir + '/forms';
       var form_xsl_filepath = forms_subfolder + '/' + form + '.xsl';
       var form_xsl = fs.readFileSync( form_xsl_filepath, 'utf-8' );
-      console.log({form_xsl});
 
+      /* xpath を使わずに実装する
       var xsl = new dom().parseFromString( form_xsl, 'text/xml' );
 
-      var body_nodes = select( "html", xsl, false ); 
-      console.log({body_nodes});
+      var body_nodes = select( "/html", xsl, true ); 
+      console.log({body_nodes});  //. この時点で取得できてない・・
 
       var valueof_nodes = select( "html/body/xsl:value-of", xsl, false );  //. = [] になってしまう
       console.log({valueof_nodes});
@@ -209,6 +207,22 @@ app.createViewXML = async function( view ){
             }
           }
         });
+      }
+      */
+      var n1 = form_xsl.indexOf( '<xsl:value-of ' );
+      while( n1 > -1 ){
+        var n2 = form_xsl.indexOf( ' />', n1 + 1 );
+        if( n2 > n1 + 1 ){
+          var xsl_valueof = form_xsl.substring( n1, n2 + 3 );
+          n2 = xsl_valueof.indexOf( "@name='" );
+          var n3 = xsl_valueof.indexOf( "'", n2 + 7 );
+          if( n2 > -1 && n3 > n2 + 7 ){
+            var field_name = xsl_valueof.substring( n2 + 7, n3 );
+            field_names.push( field_name );
+          }
+        }
+
+        n1 = form_xsl.indexOf( '<xsl:value-of ', n1 + 1 );
       }
 
       /* ここで取り出すフィールド名は xsl:value-of のものだけでいい
