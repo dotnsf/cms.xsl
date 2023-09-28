@@ -323,7 +323,14 @@ app.readDoc = async function( doc_id ){
         doc_item_nodes.forEach( async function( doc_item_node ){
           var field_name = select( "@name", doc_item_node, true ).nodeValue;
           //var field_value = doc_item_node.nodeValue;
-          var field_value = select( "text()", doc_item_node, true ).nodeValue;
+          var field_value = select( "text()", doc_item_node, true );
+          if( field_value && field_value.nodeValue ){
+            field_value = field_value.nodeValue;
+          }else{
+            //. #3 値が <p>～～</p><p>～～</p> のようなリッチテキストだと値が正しく取得できずにここに来る
+            //. text() ではなく、html タグごと取得する方法が必要
+            field_value = '';//select( "parent/text()", doc_item_node, true ).nodeValue;
+          }
           values[field_name] = field_value;
         });
       }
@@ -459,7 +466,7 @@ app.transformXSL = async function( form, doc_id, is_display ){
                 var value = ( values && field_name in values ) ? values[field_name] : '';
     
                 form_xsl = form_xsl.substr( 0, n1 ) 
-                  + '<textarea id="' + field_name + '" name="' + field_name + '" placeholder="' + field_name + '">' + value + '</textarea>'
+                  + '<textarea class="trumbowyg" id="' + field_name + '" name="' + field_name + '" placeholder="' + field_name + '">' + value + '</textarea>'
                   + form_xsl.substr( n0 + 2 );
               }
             }
@@ -472,22 +479,35 @@ app.transformXSL = async function( form, doc_id, is_display ){
         form_xsl = '<body>No &lt;body&gt; tag found in form XSL.</body>';
       }
 
-      var form_html = '<html>'
-        + '<head>'
-        + '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">'
-        + '<script src="//code.jquery.com/jquery-2.2.4.min.js"></script>'
-        //+ '<link rel="stylesheet" href="//cdn.datatables.net/t/bs-3.3.6/jqc-1.12.0,dt-1.10.11/datatables.min.css"/>'
-        //+ '<script src="//cdn.datatables.net/t/bs-3.3.6/jqc-1.12.0,dt-1.10.11/datatables.min.js"></script>'
-        + '<link href="//maxcdn.bootstrapcdn.com/bootstrap/4.5.1/css/bootstrap.min.css" rel="stylesheet"/>'
-        + '<script src="//maxcdn.bootstrapcdn.com/bootstrap/4.5.1/js/bootstrap.min.js"></script>'
-        + '<link href="//use.fontawesome.com/releases/v5.15.4/css/all.css" rel="stylesheet"/>'
-        + '<script>'
-        + '$(function(){'
-        + '});'
-        + '</script>'
-        + '</head>'
+      var form_html = '<html>\n'
+        + '<head>\n'
+        + '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n'
+        + '<script src="//code.jquery.com/jquery-2.2.4.min.js"></script>\n'
+        //+ '<link rel="stylesheet" href="//cdn.datatables.net/t/bs-3.3.6/jqc-1.12.0,dt-1.10.11/datatables.min.css"/>\n'
+        //+ '<script src="//cdn.datatables.net/t/bs-3.3.6/jqc-1.12.0,dt-1.10.11/datatables.min.js"></script>\n'
+        + '<link href="//maxcdn.bootstrapcdn.com/bootstrap/4.5.1/css/bootstrap.min.css" rel="stylesheet"/>\n'
+        + '<script src="//maxcdn.bootstrapcdn.com/bootstrap/4.5.1/js/bootstrap.min.js"></script>\n'
+        + '<link href="//use.fontawesome.com/releases/v5.15.4/css/all.css" rel="stylesheet"/>\n'
+        + '<link href="../resources/web.nsf.css" rel="stylesheet"/>\n'
+        + '<script src="../resources/web.nsf.js"></script>\n'
+
+        //. #3
+        + '<script src="//ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>\n'
+        + '<script src="//cdnjs.cloudflare.com/ajax/libs/Trumbowyg/2.25.2/trumbowyg.min.js"></script>\n'
+        + '<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/Trumbowyg/2.25.2/ui/trumbowyg.min.css"/>\n'
+        + '<script>\n'
+        //+ '<xsl:comment>\n'
+        //+ '<![CDATA[\n'
+        + '$(function(){\n'
+        + '//  $(".trumbowyg").trumbowyg();\n'   //. タグを有効にすると <textarea> の xpath がおかしくなる
+        + '});\n'
+        //+ ']]>\n'
+        //+ '</xsl:comment>\n'
+        + '</script>\n'
+
+        + '</head>\n'
         + form_xsl
-        + '</html>';
+        + '</html>\n';
   
       resolve( form_html );
     }
